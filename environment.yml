@@ -1,0 +1,22 @@
+name: cos424
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pandas
+  - numpy
+  - scipy
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  - statsmodels
+  - networkx
+  - jupyterlab
+  - notebook
+  - ipykernel
+  - jupytext
+  - pyarrow
+  - pip
+  - pip:
+      - sentence-transformers
+      - bertopic
