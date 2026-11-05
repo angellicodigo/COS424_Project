@@ -250,7 +250,11 @@ def _(compute_text_embeddings_SBERT, iclr2026v1):
     autotokenizer_path = "/scratch/network/al5098/COS424/autotokenizer"
     output_dir = "/scratch/network/al5098/COS424/"
 
-    compute_text_embeddings_SBERT(iclr2026v1, local_path=autotokenizer_path, output_dir=output_dir)
+    compute_text_embeddings_SBERT(
+        iclr2026v1["abstract"].tolist(),
+        local_path=autotokenizer_path,
+        output_dir=output_dir,
+    )
     return
 
 

@@ -1,7 +1,7 @@
 import datasets
 import numpy as np
 import torch
-from tqdm.notebook import tqdm
+    from tqdm.auto import tqdm
 
 def mean_pooling(token_embeds, attention_mask):
     """Returns [AVG] token.
@@ -40,19 +40,33 @@ def sep_pooling(token_embeds, attention_mask):
     
 
 @torch.no_grad()
-def generate_embeddings(abstracts, tokenizer, model, device, batch_size=2048, return_seventh = False):
+def generate_embeddings(
+    abstracts,
+    tokenizer,
+    model,
+    device,
+    batch_size=2048,
+    return_seventh=False,
+    num_workers=2,
+):
     """Generate embeddings using BERT-based model.
 
     Parameters
     ----------
-    abstracts : list, this has to be a list not sure if array works but pandas do not work
+    abstracts : list
         Abstract texts.
-    tokenizer : transformers.models.bert.tokenization_bert_fast.BertTokenizerFast
+    tokenizer : transformers.AutoTokenizer
         Tokenizer.
-    model : transformers.models.bert.modeling_bert.BertModel
+    model : transformers.AutoModel
         BERT-based model.
     device : str, {"cuda", "cpu"}
         "cuda" if torch.cuda.is_available() else "cpu".
+    batch_size : int, default=2048
+        Batch size.
+    return_seventh : bool, default=False
+        Whether to return the 7th layer token embedding.
+    num_workers : int, default=2
+        DataLoader worker count.
         
     Returns
     -------
@@ -63,19 +77,19 @@ def generate_embeddings(abstracts, tokenizer, model, device, batch_size=2048, re
     embedding_av : ndarray
         Average of tokens of the abstracts.
     """
-    # preprocess the input
+    # preprocess the input on CPU; DataLoader feeds batches to device
     inputs = tokenizer(
         abstracts,
         padding=True,
         truncation=True,
         return_tensors="pt",
         max_length=512,
-    ).to(device)
+    )
 
     dataset = datasets.Dataset.from_dict(inputs)
     dataset.set_format(type="torch", output_all_columns=True)
     loader = torch.utils.data.DataLoader(
-        dataset, batch_size=batch_size, num_workers=10
+        dataset, batch_size=batch_size, num_workers=num_workers
     )
 
     embedding_av  = []
