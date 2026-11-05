@@ -4,20 +4,18 @@ channels:
 dependencies:
   - python=3.12
   - pandas
+  - pyarrow
   - numpy
   - scipy
   - matplotlib
   - seaborn
   - scikit-learn
-  - statsmodels
-  - networkx
-  - jupyterlab
-  - notebook
   - ipykernel
-  - jupytext
-  - pyarrow
+  - notebook
   - pip
   - pip:
       - sentence-transformers
-      - bertopic
+      - openTSNE
+      - python-dotenv
       - marimo
+      - tqdm
