@@ -20,3 +20,21 @@ If there are changes to the environment.yml, you need to update your Anaconda en
 conda env update -f environment.yml --prune
 ```
 
+# 2. Running Notebooks
+
+### Jupyter Notebook
+```bash
+jupyter lab
+# or
+jupyter notebook
+```
+
+### Marimo Notebook
+You can run and edit the reactive Marimo notebook:
+```bash
+marimo edit initial_analysis.py
+```
+Or run it as a standalone web app:
+```bash
+marimo run initial_analysis.py
+```
