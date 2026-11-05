@@ -9,10 +9,11 @@ def _():
     import marimo as mo
     import pandas as pd
     from scripts.extract_dataset import group_by_last_author
+    from scripts.iclr_analysis import compute_text_embeddings_SBERT, download_autotokenizer
     import matplotlib.pyplot as plt
     import numpy as np
 
-    return group_by_last_author, mo, np, pd, plt
+    return compute_text_embeddings_SBERT, group_by_last_author, mo, np, pd, plt
 
 
 @app.cell(hide_code=True)
@@ -25,9 +26,9 @@ def _(mo):
 
 @app.cell
 def _(pd):
-    iclr_df = pd.read_parquet("data/iclr26v1.parquet")
-    iclr_df.head()
-    return (iclr_df,)
+    iclr2026v1 = pd.read_parquet("data/iclr26v1.parquet")
+    iclr2026v1.head()
+    return (iclr2026v1,)
 
 
 @app.cell(hide_code=True)
@@ -47,10 +48,10 @@ def _(mo):
 
 
 @app.cell
-def _(group_by_last_author, iclr_df):
-    pi_df = group_by_last_author(iclr_df)
-    pi_df.sort_values("num_papers", ascending=False)
-    return (pi_df,)
+def _(group_by_last_author, iclr2026v1):
+    last_author_df = group_by_last_author(iclr2026v1)
+    last_author_df.sort_values("num_papers", ascending=False)
+    return (last_author_df,)
 
 
 @app.cell(hide_code=True)
@@ -70,8 +71,8 @@ def _(mo):
 
 
 @app.cell
-def _(np, pi_df, plt):
-    paper_counts = pi_df["num_papers"].values
+def _(last_author_df, np, plt):
+    paper_counts = last_author_df["num_papers"].values
     n_total = len(paper_counts)
 
     k_values = np.arange(1, 26)
@@ -124,8 +125,8 @@ def _(mo):
 
 
 @app.cell
-def _(pi_df):
-    solo_authors = pi_df[pi_df["collaborators"].apply(lambda collabs: all(len(c) == 0 for c in collabs))]
+def _(last_author_df):
+    solo_authors = last_author_df[last_author_df["collaborators"].apply(lambda collabs: all(len(c) == 0 for c in collabs))]
     solo_authors.sort_values("num_papers", ascending=False)
     return (solo_authors,)
 
@@ -146,9 +147,9 @@ def _(mo):
 
 
 @app.cell
-def _(pi_df):
+def _(last_author_df):
     threshold = 5
-    df = pi_df[(pi_df["num_papers"] >= threshold) & (pi_df["last_author"] != "Anonymous")].reset_index(drop=True)
+    df = last_author_df[(last_author_df["num_papers"] >= threshold) & (last_author_df["last_author"] != "Anonymous")].reset_index(drop=True)
     df
     return df, threshold
 
@@ -225,6 +226,31 @@ def _(paper_freq, plt, threshold):
     plt.ylabel("Number of Authors (log scale)")
     plt.tight_layout()
     plt.gca()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Paper Representation: Recreating the Embeddings
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    The authors of the original paper used multiple models to convert the abstracts into representations. One approach was to use the SBERT. The results from the paper shows that SBERT had a higher performance to the other methods. The authors do not provide their weights, but fortunately they provide the code to recreate their embeddings.
+    """)
+    return
+
+
+@app.cell
+def _(compute_text_embeddings_SBERT, iclr2026v1):
+    autotokenizer_path = "/scratch/network/al5098/COS424/autotokenizer"
+    output_dir = "/scratch/network/al5098/COS424/"
+
+    compute_text_embeddings_SBERT(iclr2026v1, local_path=autotokenizer_path, output_dir=output_dir)
     return
 
 

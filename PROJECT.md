@@ -7,12 +7,12 @@ If you are working on the HPC clusters (Adroit)
 ml purge
 ml anaconda3/2026.7 
 conda env create -f environment.yml
-conda activate cos424
+conda activate iclr
 ```
 Else you can just do
 ```bash
 conda env create -f environment.yml
-conda activate cos424
+conda activate iclr
 ```
 
 If there are changes to the environment.yml, you need to update your Anaconda environment
