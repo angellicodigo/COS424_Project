@@ -9,11 +9,19 @@ def _():
     import marimo as mo
     import pandas as pd
     from scripts.extract_dataset import group_by_last_author
-    from scripts.iclr_analysis import compute_text_embeddings_SBERT, download_autotokenizer
+    from scripts.iclr_analysis import compute_text_embeddings_SBERT, download_autotokenizer, compute_tsne
     import matplotlib.pyplot as plt
     import numpy as np
 
-    return compute_text_embeddings_SBERT, group_by_last_author, mo, np, pd, plt
+    return (
+        compute_text_embeddings_SBERT,
+        compute_tsne,
+        group_by_last_author,
+        mo,
+        np,
+        pd,
+        plt,
+    )
 
 
 @app.cell(hide_code=True)
@@ -42,7 +50,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    Here we are assuming that the last author listed in `authors` is the Principal Investigators (PIs). We want to analyze the PIs because they have more publications than a new researcher.
+    Here we are assuming that the last author listed in `authors` is the Principal Investigators (PIs). We want to analyze the PIs because they have more publications than a new researcher and have better intuition on whether to stay in a research topic or to branch out.
     """)
     return
 
@@ -117,9 +125,9 @@ def _(last_author_df, np, plt):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    For this inital analysis, we have decided to look at last listed authors who are part of 5 papers or more. This is because we want to study researchers who published more than 1 paper. These are the authors who decided to stay within a field and to change fields.
+    For this inital analysis, we have decided to look at last listed authors who are part of 5 papers or more. This is because we want to study researchers who published more than 1 paper. These are the authors who decided to stay within a field and/or to change fields.
 
-    However, there are researchers who do not collaborate with other people. This is included in our dataset. Are these independent researchers considered PIs? Let's look at the number of independent researchers in the dataset.
+    However, there are researchers who do not collaborate with other people. Are these independent researchers considered PIs? Let's look at the number of independent researchers in the dataset.
     """)
     return
 
@@ -240,21 +248,36 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    The authors of the original paper used multiple models to convert the abstracts into representations. One approach was to use the SBERT. The results from the paper shows that SBERT had a higher performance to the other methods. The authors do not provide their weights, but fortunately they provide the code to recreate their embeddings.
+    The authors of the original paper used multiple models to convert the abstracts into representations. One approach was to use SBERT, which was shown to have the highest performance. The authors do not provide their weights, but fortunately they provide the code to recreate their embeddings.
     """)
     return
 
 
 @app.cell
-def _(compute_text_embeddings_SBERT, iclr2026v1):
-    autotokenizer_path = "/scratch/network/al5098/COS424/autotokenizer"
-    output_dir = "/scratch/network/al5098/COS424/"
+def _(compute_text_embeddings_SBERT):
+    # Run the code below for the first time. It downloads the SBERT embeddings and output it in `output_dir`.
+    #
+    # output_path = "/scratch/network/al5098/COS424/"
+    #
+    # embedding_cls, embedding_sep, embedding_av = compute_text_embeddings_SBERT(
+    #     iclr2026v1["abstract"].tolist(),
+    #     output_path=output_path
+    # )
 
-    compute_text_embeddings_SBERT(
-        iclr2026v1["abstract"].tolist(),
-        local_path=autotokenizer_path,
-        output_dir=output_dir,
+    SBERT_embeddings_path = "data/embeddings_sbert"
+    _, _, embedding_av = compute_text_embeddings_SBERT(
+        embeddings_path = SBERT_embeddings_path
     )
+    return (embedding_av,)
+
+
+@app.cell
+def _(compute_tsne, embedding_av):
+    # Run the code below for the first time. It's optional to download the tsne file.
+    #
+    output_path = "/scratch/network/al5098/COS424/"
+
+    tsne_av = compute_tsne(embeddings=embedding_av, output_path=output_path)
     return
 
 

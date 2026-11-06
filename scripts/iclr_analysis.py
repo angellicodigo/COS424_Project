@@ -1,12 +1,18 @@
 from transformers import AutoTokenizer, AutoModel
 import torch
-from embeddings import generate_embeddings
 from pathlib import Path
 import numpy as np
 import random
 import gc
 import os
 import argparse
+from openTSNE import TSNE
+
+try:
+    from scripts.embeddings import generate_embeddings
+except ImportError:
+    from embeddings import generate_embeddings
+
 
 def download_autotokenizer(
     model_name: str = "sentence-transformers/all-mpnet-base-v2",
@@ -28,18 +34,28 @@ def download_autotokenizer(
 
 
 def compute_text_embeddings_SBERT(
-    abstracts: list[str],
+    abstracts: list[str] | None = None,
     model_path: str = "sentence-transformers/all-mpnet-base-v2",
-    local_path: Path | str | None = None,
-    output_dir: Path | str | None = None,
+    embeddings_path: Path | str | None = None,
+    autotokenizer_path: Path | str | None = None,
+    output_path: Path | str | None = None,
     batch_size: int = 256,
     seed: int = 42,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     random.seed(seed)
 
-    # 1. If local_path provided -> use that; otherwise download/cache via download_autotokenizer
-    if local_path is not None:
-        resolved_model_path = Path(local_path)
+    if embeddings_path is not None:
+        local_dir = Path(embeddings_path)
+        cls_file = local_dir / "embedding_abstracts_only_cls.npy"
+        sep_file = local_dir / "embedding_abstracts_only_sep.npy"
+        av_file = local_dir / "embedding_abstracts_only_av.npy"
+
+        if cls_file.exists() and sep_file.exists() and av_file.exists():
+            return np.load(cls_file), np.load(sep_file), np.load(av_file)
+
+    # If autotokenizer_path provided -> use that; otherwise download/cache via download_autotokenizer
+    if autotokenizer_path is not None:
+        resolved_model_path = Path(autotokenizer_path)
     else:
         resolved_model_path = download_autotokenizer(model_name=model_path)
 
@@ -56,8 +72,8 @@ def compute_text_embeddings_SBERT(
         abstracts, tokenizer, model, device, batch_size=batch_size
     )
 
-    if output_dir is not None:
-        target_dir = Path(output_dir) / f"embeddings_{model_name.lower()}"
+    if output_path is not None:
+        target_dir = Path(output_path) / f"embeddings_{model_name.lower()}"
         target_dir.mkdir(parents=True, exist_ok=True)
 
         np.save(target_dir / "embedding_abstracts_only_cls", embedding_cls)
@@ -72,6 +88,36 @@ def compute_text_embeddings_SBERT(
 
     return embedding_cls, embedding_sep, embedding_av
 
+
+def compute_tsne(
+    embeddings: np.ndarray | None = None,
+    embeddings_file: Path | str | None = None,
+    output_path: Path | str | None = None,
+    verbose: bool = True,
+    random_state: int = 42,
+) -> np.ndarray:
+    if output_path is not None:
+        target_path = Path(output_path)
+        if target_path.exists():
+            return np.load(target_path)
+
+    if embeddings is None:
+        if embeddings_file is not None and Path(embeddings_file).exists():
+            embeddings = np.load(embeddings_file)
+        else:
+            raise ValueError("Must provide either 'embeddings' array or a valid 'embeddings_file' path.")
+
+    tsne = TSNE(verbose=verbose, random_state=random_state)
+    tsne_coords = np.asarray(tsne.fit(embeddings))
+
+    if output_path is not None:
+        target_path = Path(output_path)
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        np.save(target_path, tsne_coords)
+
+    return tsne_coords
+
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download and save model and tokenizer locally.")
     parser.add_argument(

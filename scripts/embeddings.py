@@ -1,7 +1,7 @@
 import datasets
 import numpy as np
 import torch
-    from tqdm.auto import tqdm
+from tqdm.auto import tqdm
 
 def mean_pooling(token_embeds, attention_mask):
     """Returns [AVG] token.
