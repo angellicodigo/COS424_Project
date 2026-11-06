@@ -84,6 +84,99 @@ def to_score_list(raw_scores: object) -> list[int]:
     return []
 
 
+def extract_unique_last_authors(raw_authors_series: pd.Series) -> set[str]:
+    """
+    Extracts the unique set of non-empty last-listed authors across all papers.
+
+    Input:
+        raw_authors_series: Pandas Series containing comma-separated author strings.
+
+    Output:
+        unique_last_authors: Set of unique last-author name strings.
+    """
+    return {
+        last_author
+        for raw in raw_authors_series.dropna()
+        if (last_author := extract_last_author(raw)) and last_author != "Anonymous"
+    }
+
+
+def build_pi_paper_records(
+    papers_df: pd.DataFrame,
+    target_authors: set[str],
+    author_col: str,
+    id_col: str,
+    title_col: str,
+    abstract_col: str,
+    decision_col: str,
+    scores_col: str,
+    keywords_col: str,
+    labels_col: str,
+) -> pd.DataFrame:
+    """
+    Builds a normalized DataFrame mapping each targeted author to all of their co-authored papers.
+
+    Input:
+        papers_df: DataFrame containing paper records and metadata.
+        target_authors: Set of author names to extract papers for.
+        author_col: Column name for authors.
+        id_col: Column name for paper id.
+        title_col: Column name for title.
+        abstract_col: Column name for abstract.
+        decision_col: Column name for decision.
+        scores_col: Column name for scores.
+        keywords_col: Column name for keywords.
+        labels_col: Column name for labels.
+
+    Output:
+        paper_records_df: DataFrame containing flattened records per targeted author and paper.
+    """
+    prepared_df = pd.DataFrame(
+        {
+            "authors": papers_df[author_col].apply(parse_authors),
+            "id": papers_df[id_col],
+            "title": papers_df[title_col],
+            "abstract": papers_df[abstract_col],
+            "decision": papers_df[decision_col],
+            "scores": papers_df[scores_col].apply(to_score_list),
+            "keywords": papers_df[keywords_col].apply(to_string_list),
+            "labels": papers_df[labels_col],
+        }
+    )
+
+    records = []
+    for row in prepared_df.itertuples(index=False):
+        matching_pis = [author for author in row.authors if author in target_authors]
+        for pi in matching_pis:
+            collaborators = [author for author in row.authors if author != pi]
+            records.append(
+                (
+                    pi,
+                    row.id,
+                    row.title,
+                    row.abstract,
+                    collaborators,
+                    row.decision,
+                    row.scores,
+                    row.keywords,
+                    row.labels,
+                )
+            )
+
+    column_names = [
+        "last_author",
+        "id",
+        "title",
+        "abstract",
+        "collaborators",
+        "decision",
+        "score",
+        "keywords",
+        "labels",
+    ]
+    return pd.DataFrame(records, columns=column_names)
+
+
 def group_by_last_author(
     papers_df: pd.DataFrame,
     author_col: str = "authors",
@@ -96,7 +189,7 @@ def group_by_last_author(
     labels_col: str = "labels",
 ) -> pd.DataFrame:
     """
-    Groups papers by their last author (Principal Investigator) and aggregates their metadata and paper counts.
+    Groups papers by authors who have appeared as a last author (PI), aggregating all papers they co-authored.
 
     Input:
         papers_df: DataFrame containing paper records and metadata.
@@ -110,33 +203,22 @@ def group_by_last_author(
         labels_col: Name of column containing topic or classification labels.
 
     Output:
-        ids_by_last_authors: Aggregated DataFrame where each row corresponds to a PI with lists of paper attributes and total publication count.
+        ids_by_last_authors: Aggregated DataFrame where each row corresponds to a PI with lists of paper attributes and total publication count across all co-authored papers.
     """
-    last_authors = papers_df[author_col].apply(extract_last_author)  # identify PI for each paper
-    # Recent papers may not list authors because they are undergoing double-blind review
-    valid_mask = last_authors.notna()  # filter out papers without author information
-
-    paper_subset = pd.DataFrame(
-        {
-            "last_author": last_authors[valid_mask],
-            "id": papers_df.loc[valid_mask, id_col],
-            "title": papers_df.loc[valid_mask, title_col],
-            "abstract": papers_df.loc[valid_mask, abstract_col],
-            "collaborators": [
-                extract_collaborators(author_str, pi_name)
-                for author_str, pi_name in zip(
-                    papers_df.loc[valid_mask, author_col],
-                    last_authors[valid_mask],
-                )
-            ],
-            "decision": papers_df.loc[valid_mask, decision_col],
-            "score": papers_df.loc[valid_mask, scores_col].apply(to_score_list),
-            "keywords": papers_df.loc[valid_mask, keywords_col].apply(to_string_list),
-            "labels": papers_df.loc[valid_mask, labels_col],
-        }
+    unique_last_authors = extract_unique_last_authors(papers_df[author_col])
+    paper_subset = build_pi_paper_records(
+        papers_df=papers_df,
+        target_authors=unique_last_authors,
+        author_col=author_col,
+        id_col=id_col,
+        title_col=title_col,
+        abstract_col=abstract_col,
+        decision_col=decision_col,
+        scores_col=scores_col,
+        keywords_col=keywords_col,
+        labels_col=labels_col,
     )
 
-    # Group papers by last author and aggregate attributes into lists
     ids_by_last_authors = paper_subset.groupby("last_author").agg(
         ids=("id", list),
         titles=("title", list),
