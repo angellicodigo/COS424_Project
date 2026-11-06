@@ -257,27 +257,67 @@ def _(mo):
 def _(compute_text_embeddings_SBERT):
     # Run the code below for the first time. It downloads the SBERT embeddings and output it in `output_dir`.
     #
-    # output_path = "/scratch/network/al5098/COS424/"
+    # output_path = "..."
     #
     # embedding_cls, embedding_sep, embedding_av = compute_text_embeddings_SBERT(
     #     iclr2026v1["abstract"].tolist(),
     #     output_path=output_path
     # )
 
-    SBERT_embeddings_path = "/scratch/network/al5098/COS424/embeddings_sbert/"
+    SBERT_embeddings_path = "data\embeddings_sbert"
     _, _, embedding_av = compute_text_embeddings_SBERT(
         embeddings_path = SBERT_embeddings_path
     )
     return (embedding_av,)
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    The main pipeline from the paper is to first use SBERT then to use TSNE to map the SBERT's embeddings into a 2D space.
+    """)
+    return
+
+
 @app.cell
 def _(compute_tsne, embedding_av):
-    # Run the code below for the first time. It's optional to download the tsne file.
-    #
-    output_path = "/scratch/network/al5098/COS424/"
+    tsne_av = compute_tsne(embeddings=embedding_av)
+    return (tsne_av,)
 
-    tsne_av = compute_tsne(embeddings=embedding_av, output_path=output_path)
+
+@app.cell
+def _(iclr2026v1, np, plt, tsne_av):
+    # Strip and filter out empty or anonymous author strings
+    all_authors = [
+        author.strip()
+        for row in iclr2026v1.authors
+        if row
+        for author in row.split(', ')
+        if author.strip() and author.strip() != "Anonymous"
+    ]
+    authors, counts = np.unique(all_authors, return_counts=True)
+    ind = np.argsort(counts)[::-1]
+    top_authors = authors[ind]
+
+    fig_plot, axs = plt.subplots(nrows=3, ncols=6, figsize=(6.0, 3.5), layout='constrained')
+
+    for num, author in enumerate(top_authors[:18]):
+        mask = [author in a.split(', ') for a in iclr2026v1.authors]
+    
+        axs.flat[num].axis('equal')
+        axs.flat[num].scatter(*tsne_av.T, s=.5, ec='none', c='#aaaaaa', rasterized=True)
+        axs.flat[num].scatter(*tsne_av[mask].T, s=5, ec='none', c='k', zorder=2)
+
+        axs.flat[num].axis('off')
+        axs.flat[num].set_title(f'{author}', fontsize=7, y=.92, x=.48)
+        axs.flat[num].text(.99, .8, f'{np.sum(mask)}', ha='right', transform=axs.flat[num].transAxes, fontsize=7)
+    
+        accepted = np.array([d[:6]=='Accept' for d in iclr2026v1.decision])
+        acceptance_rate = np.nanmean(accepted[mask]) * 100
+        axs.flat[num].text(.99, .1, f'{acceptance_rate:.0f}%', fontsize=7, 
+                           ha='right', transform=axs.flat[num].transAxes)
+    fig_plot
+
     return
 
 
