@@ -91,31 +91,29 @@ def compute_text_embeddings_SBERT(
 
 def compute_tsne(
     embeddings: np.ndarray | None = None,
-    embeddings_file: Path | str | None = None,
+    local_path: Path | str | None = None,
     output_path: Path | str | None = None,
+    output_name: str | None = None,
     verbose: bool = True,
     random_state: int = 42,
 ) -> np.ndarray:
-    if output_path is not None:
-        target_path = Path(output_path)
-        if target_path.exists():
-            return np.load(target_path)
+    if local_path is not None:
+        file = Path(local_path)
+        if file.exists():
+            return np.load(file)
 
     if embeddings is None:
-        if embeddings_file is not None and Path(embeddings_file).exists():
-            embeddings = np.load(embeddings_file)
-        else:
-            raise ValueError("Must provide either 'embeddings' array or a valid 'embeddings_file' path.")
+        raise ValueError("Must provide 'embeddings' if 'local_path' does not exist.")
 
-    tsne = TSNE(verbose=verbose, random_state=random_state)
-    tsne_coords = np.asarray(tsne.fit(embeddings))
+    tsne = TSNE(n_jobs=-1, verbose=verbose, random_state=random_state)
+    tsne_fit = np.asarray(tsne.fit(embeddings))
 
     if output_path is not None:
-        target_path = Path(output_path)
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-        np.save(target_path, tsne_coords)
+        target_file = Path(output_path) / output_name if output_name else Path(output_path)
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+        np.save(target_file, tsne_fit)
 
-    return tsne_coords
+    return tsne_fit
 
     
 if __name__ == "__main__":

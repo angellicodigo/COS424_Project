@@ -264,7 +264,7 @@ def _(compute_text_embeddings_SBERT):
     #     output_path=output_path
     # )
 
-    SBERT_embeddings_path = "data/embeddings_sbert"
+    SBERT_embeddings_path = "/scratch/network/al5098/COS424/embeddings_sbert/"
     _, _, embedding_av = compute_text_embeddings_SBERT(
         embeddings_path = SBERT_embeddings_path
     )
