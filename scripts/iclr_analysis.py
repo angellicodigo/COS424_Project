@@ -4,7 +4,6 @@ from pathlib import Path
 import numpy as np
 import random
 import gc
-import os
 import argparse
 from openTSNE import TSNE
 
@@ -176,15 +175,24 @@ if __name__ == "__main__":
         help="Hugging Face model identifier",
     )
     parser.add_argument(
-        "--target_dir",
+        "--output_path",
         type=str,
         default=None,
         help="Directory to save the model and tokenizer",
     )
     args = parser.parse_args()
 
-    saved_path = download_autotokenizer(
-        model_name=args.model_name,
-        target_dir=args.target_dir,
+    import pandas as pd
+
+    iclr2025v2 = pd.read_parquet("/Users/angel/VSCode/GitHub/COS424_Project/data/iclr25v2.parquet")
+    print(iclr2025v2["abstract"].tolist()[0])
+    embedding_cls, embedding_sep, embedding_av = compute_text_embeddings_SBERT(
+        iclr2025v2["abstract"].tolist(),
+        output_path=args.output_path
     )
-    print(f"Model saved to: {saved_path}")
+
+    # saved_path = download_autotokenizer(
+    #     model_name=args.model_name,
+    #     output_path=output_path,
+    # )
+    # print(f"Model saved to: {saved_path}")

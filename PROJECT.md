@@ -10,7 +10,6 @@ COS424_Project/
 │   ├── embeddings.py                   # Token pooling (mean/sep) and batched SBERT embedding pipeline
 │   └── iclr_analysis.py                # Model downloader, embedding generator, and t-SNE wrapper
 │
-├── initial_analysis.py                 # Interactive Marimo reactive notebook for data exploration
 ├── initial_analysis.ipynb              # Jupyter notebook export of initial analysis
 ├── environment.yml                     # Conda environment definition (`iclr`)
 ├── README.md                           # Brief project description and citation
@@ -43,28 +42,7 @@ conda env update -f environment.yml --prune
 
 ---
 
-## 2. Running Notebooks
-
-### Jupyter Notebook
-```bash
-jupyter lab
-# or
-jupyter notebook
-```
-
-### Marimo Notebook
-You can run and edit the reactive Marimo notebook:
-```bash
-marimo edit initial_analysis.py
-```
-Or run it as a standalone web app:
-```bash
-marimo run initial_analysis.py
-```
-
----
-
-## 3. Codebase Walkthrough & Module Guide
+## 2. Codebase Walkthrough & Module Guide
 
 ### `scripts/extract_dataset.py`
 Provides data wrangling and aggregation utilities for paper records:
@@ -90,7 +68,7 @@ High-level orchestrator for model caching, representation generation, and projec
 
 ---
 
-## 4. Analysis Pipeline in `initial_analysis.py`
+## 3. Analysis Pipeline in `initial_analysis.py`
 
 The main notebook (`initial_analysis.py`) performs the following exploratory analysis steps:
 1. **Dataset Loading**: Reads `data/iclr26v1.parquet` (or earlier years) containing papers and metadata.
@@ -103,7 +81,7 @@ The main notebook (`initial_analysis.py`) performs the following exploratory ana
 
 ---
 
-## 5. Running on HPC (Slurm)
+## 4. Running on HPC (Slurm)
 
 For computing heavy embeddings or training models on Princeton's Adroit cluster, submit jobs using the Slurm script:
 ```bash
