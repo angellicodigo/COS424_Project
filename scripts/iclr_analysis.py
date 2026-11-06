@@ -180,15 +180,21 @@ if __name__ == "__main__":
         default=None,
         help="Directory to save the model and tokenizer",
     )
+    parser.add_argument(
+        "--autotokenizer_path",
+        type=str,
+        default=None
+    )
     args = parser.parse_args()
 
     import pandas as pd
 
-    iclr2025v2 = pd.read_parquet("/Users/angel/VSCode/GitHub/COS424_Project/data/iclr25v2.parquet")
-    print(iclr2025v2["abstract"].tolist()[0])
+    iclr2025v2 = pd.read_parquet("/home/al5098/GitHub/COS424_Project/data")
+    
     embedding_cls, embedding_sep, embedding_av = compute_text_embeddings_SBERT(
         iclr2025v2["abstract"].tolist(),
-        output_path=args.output_path
+        output_path=args.output_path,
+        autotokenizer_path=args.autotokenizer_path
     )
 
     # saved_path = download_autotokenizer(
