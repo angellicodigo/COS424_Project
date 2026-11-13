@@ -1,0 +1,5 @@
+# Embeddings stay local and are never committed
+*.npy
+
+# Python cache
+__pycache__/
