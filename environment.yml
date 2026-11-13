@@ -10,6 +10,7 @@ dependencies:
   - matplotlib
   - seaborn
   - scikit-learn
+  - statsmodels
   - ipykernel
   - notebook
   - pip
