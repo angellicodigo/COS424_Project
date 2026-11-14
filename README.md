@@ -13,9 +13,9 @@ Dataset and Preprocessing
 Our main dataset is the ICLR OpenReview Dataset constructed by Marquez-Gonzalez and Kobak (2024). The dataset contains each paper’s year, title, abstract, authors, the decision (accept or reject), paper review scores, keywords, and labels. During preprocessing, we first grouped papers by principal investigator (PI), which is the last listed author in a paper. More in-depth exploration of the dataset can be seen in our Jupyter notebook.
 
 Methods
-Paper representation. We embed each submission’s title and abstract using a model(s?) built on SciBERT. The original paper uses scientific specialized domain models DeCLUTR-sci (Giorgi et al., 2021), SciNCL (Ostendorff et al., 2022) and SPECTER (Cohan et al., 2020). The original paper also uses tf-IDF to create a bag-of-words embedding for each article. Using these approaches to creating our representations will yield vectors in a high-dimensional space that we can use to make our comparisons between different papers. 
+Paper representation: We embed each submission’s title and abstract using a model(s?) built on SciBERT. The original paper uses scientific specialized domain models DeCLUTR-sci (Giorgi et al., 2021), SciNCL (Ostendorff et al., 2022) and SPECTER (Cohan et al., 2020). The original paper also uses tf-IDF to create a bag-of-words embedding for each article. Using these approaches to creating our representations will yield vectors in a high-dimensional space that we can use to make our comparisons between different papers. 
 
-Quantifying specialization. 
+Quantifying specialization: 
 Specialization as inverse area spanned by papers:  We represent each author’s research history as a cloud of points in embedding space: each point is one of their papers, placed by the SPECTER embedding of its title and abstract. Because papers on unrelated topics land far apart, the shape of the cloud – defined as the convex hull enclosed by the author’s papers – describes the author’s research spread. By extension, the inverse of this enclosed area represents specialization. Since computing the convex hull area (CHA) in a high-dimensional space is computationally intensive and sensitive to near-identical papers, we extract the top components explaining at least 90% of the variance and compute the CHA in this lower-dimensional space (Ozgur et al. 2024). Importantly, this measure needs to be adjusted by the number of papers to make volumes comparable across authors use a fixed window m so that volumes are comparable across authors.
 
 Pivot index: Similar to Hill et al. (2025), we plan on quantifying how different a new paper is compared to the author’s prior work. We will compute this by using the cosine similarity between (1) a new paper’s embedding vector representation and (2) an aggregate embedding vector representing all prior work in the H(a,t) set. Mathematically, the pivot index of prior work j and current work i of author a is computed as
@@ -27,7 +27,6 @@ Topic entropy: Using BERTopic, we extract a set of labels from each paper, which
 Divergence from general population: Specialization can be evaluated on the basis of whether or not particular authors have deviated from their peers. With an established set of years for testing, we will identify a group of authors of similar topic specialty (e.g., authors who work predominantly in Deep Learning). Consequently, we can examine how each author deviates from peers within the similar-topic group and determine whether divergence contributes to paper acceptance. 
 
 Proposed Timeline
-
 Week of 11/1 - 11/7: All group effort
 Conduct exploratory analysis – group papers by Principal Investigator, identify and remove empty and "anonymous" authors, plot minimum papers threshold (k) against % of authors retained. 
 Week of 11/8 - 11/14: Angel, Yusuf take lead, group supports as needed
@@ -42,6 +41,7 @@ Week of 12/6 - 12/12: Rohan take lead, group supports as needed
  Begin to write the results of our study and move forward. 
 Week of 12/13 - 12/17: All group effort
 Finish writing our paper and submit!
+
 References 
 Beltagy, I., Lo, K., & Cohan, A. (2019). SciBERT: A pretrained language model for scientific text. arXiv. https://doi.org/10.48550/arXiv.1903.10676
 Catak, F. O., Kuzlu, M., & Patrick, T. (2024). Improving medical diagnostics with vision-language models: Convex hull-based uncertainty analysis. arXiv. https://doi.org/10.48550/arXiv.2412.00056
