@@ -190,7 +190,7 @@ if __name__ == "__main__":
     import pandas as pd
 
     iclr2025v2 = pd.read_parquet("/home/al5098/GitHub/COS424_Project/data/iclr25v2.parquet")
-    iclr2025v2 = iclr2025v2[iclr2025v2["author"] != "Anonymous"]
+    iclr2025v2 = iclr2025v2[iclr2025v2["authors"] != "Anonymous"]
     embedding_cls, embedding_sep, embedding_av = compute_text_embeddings_SBERT(
         iclr2025v2["abstract"].tolist(),
         output_path=args.output_path,

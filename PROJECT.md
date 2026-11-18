@@ -42,6 +42,43 @@ conda env update -f environment.yml --prune
 
 ---
 
+## Data pipeline: one master dataframe for everyone
+
+Every notebook loads the same file, `../embeddings/master.parquet`, which is made by `data/generate.py`. Do not load `iclr25v2.parquet` and the `.npy` embeddings separately: they only line up row by row after the exact same filtering, and a mismatch is silent.
+
+**Folder layout** (the `embeddings/` folder sits next to the repo and is never committed):
+```
+cos424/
+├── COS424_Project/        # this repo
+└── embeddings/
+    ├── embedding_abstracts_only_av.npy   # SBERT embeddings (input)
+    └── master.parquet                     # output of data/generate.py
+```
+
+**Build it once** (a few seconds):
+```bash
+python data/generate.py
+```
+
+**Load it in a notebook:**
+```python
+iclr2025v2 = pd.read_parquet("../embeddings/master.parquet")
+embedding_av = np.stack(iclr2025v2["embedding"])   # row i = paper i
+```
+
+**What it contains:** one row per paper, 36,070 papers from 2017–2025 with "Anonymous" removed. Columns:
+- all the original `iclr25v2` columns;
+- `paper_idx`: the paper's row in the embeddings;
+- `n_authors`, `last_author` (the PI's name) and `last_author_id` (the PI's OpenReview id; 2021+ only);
+- `has_author_ids`: True for 2021+ papers;
+- `decision_group`: accept / reject / withdrawn / desk_rejected, where workshop invites count as reject;
+- `accepted` and `mean_score`;
+- `embedding`: the raw SBERT vector, not normalized.
+
+`generate.py` still writes `data/iclr25v2_no_anonymous.parquet` (the 2021+ papers, without embeddings).
+
+---
+
 ## 2. Codebase Walkthrough & Module Guide
 
 ### `scripts/extract_dataset.py`
