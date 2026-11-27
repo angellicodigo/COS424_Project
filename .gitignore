@@ -3,3 +3,8 @@
 
 # Python cache
 __pycache__/
+
+.venv
+master.parquet
+
+.DS_Store
