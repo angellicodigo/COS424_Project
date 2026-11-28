@@ -16,7 +16,6 @@ never part of the history.
 
 Measures computed for each PI paper:
     pivot        1 - cos(paper, mean of all prior papers)          (Hill et al., 2025)
-    pivot_nn     1 - cos(paper, most similar prior paper)
     pivot_recent 1 - cos(paper, exponentially weighted prior mean), half-life of 2 years
     vendi        Vendi score of m prior papers: how many distinct directions they span
                  (1 = all identical, m = all orthogonal), averaged over random subsets
@@ -208,7 +207,7 @@ def compute_pi_measures(
 
     Output: one row per PI paper with
         paper_idx, pi_id, year, n_prior, career_years (years since the PI's first paper here),
-        pivot, pivot_nn, pivot_recent, vendi.
+        pivot, pivot_recent, vendi.
     Measures are NaN when the PI has no prior papers (and vendi when fewer than vendi_m).
     """
     rng = np.random.default_rng(seed)
@@ -236,7 +235,6 @@ def compute_pi_measures(
                 "n_prior": len(prior),
                 "career_years": year - first_year,
                 "pivot": np.nan,
-                "pivot_nn": np.nan,
                 "pivot_recent": np.nan,
                 "vendi": np.nan,
             }
@@ -244,7 +242,6 @@ def compute_pi_measures(
             if len(prior) > 0:
                 prior_age = year - years[is_prior]
                 record["pivot"] = cosine_distance_to_mean(paper, prior)
-                record["pivot_nn"] = 1.0 - np.max(prior @ paper)
                 record["pivot_recent"] = cosine_distance_to_mean(paper, prior, weights=np.exp(-decay * prior_age))
                 record["vendi"] = rarefied_vendi(prior, vendi_m, vendi_subsets, rng)
 
